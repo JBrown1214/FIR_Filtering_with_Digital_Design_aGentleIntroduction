@@ -1,1 +1,11 @@
+# Virtual Environments
 .venv/
+__init__.py
+
+# Testing & Tools
+__pycache__/
+.pytest_cache
+
+# Personal Files/drafting
+ThePlan/
+TheNotes&Schematics/
