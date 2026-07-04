@@ -10,45 +10,49 @@ import numpy as np
 # This means we can represent -1.0 up to +0.999969482 
 # These functions convert between Q1.15 "decimal" to a float value
 
-# takes a float (python value) and map it to a bit-interpretation
+# Python doesn't like integers starting with 0, so Q1.15 values will be formatted as strings
+
+# takes a float (python value) and map it to a Q1.15 bit-interpretation
     # input: float (base 10)
     # step 1: multiply by 2**15 (effectively L shift by 15 decimal points)
-    #           We now have an int value, which we want to be between 32767 and -32768. 
-    #           We could either filter the input float before computation, or filter the value here, 
-    #           or maybe it will just work out if we don't filter it? (overflow math)
-    # step 10: Repeatedly mod2 to find bits starting with smallest value; store in array
+    #           We now have an int value, which shoudl be between 32767 and -32768. 
+    # step 10: Repeatedly mod2 to find bits; store in array
     #           output_binary = IntValue % 2 # output will be 1/0
     # step 11:  check original input: negative? 2's Comp flip the values (very annoying)
 def float_to_q115(INfloat):
     
     # step 1: Left shift input, filter to cap values exceeding range
-    Lshift_IN = INfloat * 2**15
+    Lshift_IN = round(INfloat * 2**15)
     # filter to fit range
     if (Lshift_IN > 32767):
         Lshift_IN = 32767
     elif (Lshift_IN < -32768):
         Lshift_IN = -32768
 
+    # print(f"{(Lshift_IN):016b}")
 
     # step 10: store int value in an array as 16 bits of signed binary
-    q115_Arr = [] # I will use big endian for the calcs for convenience 
-    while abs(Lshift_IN) > 1:
+    # Values are stored here in big-endian format
+    q115_Arr = []  
+    while abs(Lshift_IN) >= 1:
         q115_Arr.append(int(Lshift_IN % 2))
         Lshift_IN = int(Lshift_IN / 2)
-    if (len(q115_Arr) < 16): # extend to 16 bits, if needed
+    if (len(q115_Arr) < 16):            # extend to 16 bits, if needed
         bits_to_extend = 16 - len(q115_Arr)
         for i in range(bits_to_extend):
-            q115_Arr.append(0) # always extend zero (we will 2sComp later)
+            q115_Arr.append(0)          # always extend zero (2sComp later if needed)
     
-    # step 11: two's comp, if needed
+    # step 11: convert value to two's comp negative, if value is negative
+    # (positive values will inherently be in the correct format)
     if INfloat < 0:
         Flip_TwosComp(q115_Arr)
     
 
+    # convert from list to string, flip back to little-Endian in the process
     OUTq115 = ""
     for i in range(len(q115_Arr)):
         OUTq115 += str(q115_Arr.pop())
-
+    
     return (OUTq115)
 
 
@@ -56,13 +60,15 @@ def float_to_q115(INfloat):
 def q115_to_float(INq115):
     str_INq115 = str(INq115)
     magnVal = 0.0
-    for i in range(1,15,1):
+    for i in range(1,16,1):
         if int(str_INq115[i]):
             magnVal += 2**(-i)
+    if str_INq115[0] == '1':
+        magnVal -= 1.0
     return magnVal
 
 
-
+# Big Endian Notation input!!!
 def Flip_TwosComp(InArr):
     TwosCompArr = []
     
@@ -79,39 +85,17 @@ def Flip_TwosComp(InArr):
     # if all values of negated array are 1, input array was all zeros; return input array
     return InArr
 
-    
 
-
-
-
-
-#TESTING
-
-for i in range(20):
+# QUICK TESTS
+for i in range(21):
     j = i/20
     if (j == q115_to_float(float_to_q115(j))):
-        print(f"Let's go: your code is working at least partially: {j}")
+        print(f"=====Let's go: your code is working at least partially: {j} =====")
         print()
     else:
-        print(f"    Here is your starting float: {j}")
-        print(f"    Here is what Q1.15 that got turned into: {float_to_q115(j)}")
-        print(f"    Here is the float that Q1.15 got turned back into: {q115_to_float(float_to_q115(j))}")
-        print("=====Here's a break=====")
+        print(f"    Here is your starting float:                        {j}")
+        print(f"    Here is the binary that Q1.15 got turned into:      {float_to_q115(j)}")
+        k = q115_to_float(float_to_q115(j))
+        print(f"    Here is the float that Q1.15 got turned  into:      {k}")
+        print(f"    The difference is                                   {j - k}")
         print()
-
-print("*`*`*`*`*`*`*`*`*`*`*`*`*`*`*`*`*`*`*`*`*`*`*`*`*`*`")
-
-
-
-print("Here are some freebies \n")
-print(f"Float to Q1.15: -1.0 \n     {float_to_q115(-1.0)}")
-print()
-print(f"Float to Q1.15: .5 \n     {float_to_q115(.5)}")
-print()
-print(f"Float to Q1.15: .999969482  \n     {float_to_q115(.999969482)}")
-print() 
-print(f"Q1.15 to float: 0x7FFF (.99...) \n     {q115_to_float(str(0111111111111111))}")
-print() 
-print(f"Q1.15 to float: 0x8000 (-1.0) \n     {q115_to_float(str(1000000000000000))}")
-print() 
-print(f"Q1.15 to float: 0x4000 (.5) \n     {q115_to_float(str(0100000000000000))}")
