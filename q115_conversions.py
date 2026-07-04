@@ -10,70 +10,108 @@ import numpy as np
 # This means we can represent -1.0 up to +0.999969482 
 # These functions convert between Q1.15 "decimal" to a float value
 
-# takes a float (python value) an map it to a bit-interpretation
+# takes a float (python value) and map it to a bit-interpretation
+    # input: float (base 10)
+    # step 1: multiply by 2**15 (effectively L shift by 15 decimal points)
+    #           We now have an int value, which we want to be between 32767 and -32768. 
+    #           We could either filter the input float before computation, or filter the value here, 
+    #           or maybe it will just work out if we don't filter it? (overflow math)
+    # step 10: Repeatedly mod2 to find bits starting with smallest value; store in array
+    #           output_binary = IntValue % 2 # output will be 1/0
+    # step 11:  check original input: negative? 2's Comp flip the values (very annoying)
 def float_to_q115(INfloat):
-    return np.int16(INfloat * 2**15) 
+    
+    # step 1: Left shift input, filter to cap values exceeding range
+    Lshift_IN = INfloat * 2**15
+    # filter to fit range
+    if (Lshift_IN > 32767):
+        Lshift_IN = 32767
+    elif (Lshift_IN < -32768):
+        Lshift_IN = -32768
+
+
+    # step 10: store int value in an array as 16 bits of signed binary
+    q115_Arr = [] # I will use big endian for the calcs for convenience 
+    while abs(Lshift_IN) > 1:
+        q115_Arr.append(int(Lshift_IN % 2))
+        Lshift_IN = int(Lshift_IN / 2)
+    if (len(q115_Arr) < 16): # extend to 16 bits, if needed
+        bits_to_extend = 16 - len(q115_Arr)
+        for i in range(bits_to_extend):
+            q115_Arr.append(0) # always extend zero (we will 2sComp later)
+    
+    # step 11: two's comp, if needed
+    if INfloat < 0:
+        Flip_TwosComp(q115_Arr)
+    
+
+    OUTq115 = ""
+    for i in range(len(q115_Arr)):
+        OUTq115 += str(q115_Arr.pop())
+
+    return (OUTq115)
+
 
 
 def q115_to_float(INq115):
+    str_INq115 = str(INq115)
+    magnVal = 0.0
+    for i in range(1,15,1):
+        if int(str_INq115[i]):
+            magnVal += 2**(-i)
+    return magnVal
 
-    return
 
 
-
-def intB10_to_16b_2comp_Binary(INint):
-    OUTbinary = ""
-    while (abs(INint) > 1):
-        if (INint % 2 == 1):
-            if (INint > 0):
-                OUTbinary = "1" + OUTbinary
-            else: 
-                OUTbinary = "0" + OUTbinary
-        INint = math.floor(INint/2)
-    if (abs(INint) == 1):
-        OUTbinary = "1" + OUTbinary
-    else:
-        OUTbinary = "0" + OUTbinary
+def Flip_TwosComp(InArr):
+    TwosCompArr = []
     
-    if (len(str(OUTbinary)) < 16):
-        OUTbinary = ("0" * (15 - len(str(OUTbinary)))) +OUTbinary
-        if INint < 0:
-            OUTbinary = "1" + OUTbinary
-        else:
-            OUTbinary = "0" + OUTbinary
-    return OUTbinary
+    # Negate
+    for i in range(len(InArr)):
+        TwosCompArr.insert(i, (1 - InArr[i])) # 1-1 is 0, 1-0 is 1; flips all values
+    
+    # Add one (to least significant digit)
+    for i in range(len(TwosCompArr)):
+        if TwosCompArr[i] == 0:     # find first non-1 value 
+            TwosCompArr[i] = 1      # flip it to 1 (simplified addition-carry)
+            InArr = TwosCompArr     # ensure method is in-place
+            return InArr            # (I could remove this line if I really wanted...)
+    # if all values of negated array are 1, input array was all zeros; return input array
+    return InArr
+
+    
+
 
 
 
 
 #TESTING
 
+for i in range(20):
+    j = i/20
+    if (j == q115_to_float(float_to_q115(j))):
+        print(f"Let's go: your code is working at least partially: {j}")
+        print()
+    else:
+        print(f"    Here is your starting float: {j}")
+        print(f"    Here is what Q1.15 that got turned into: {float_to_q115(j)}")
+        print(f"    Here is the float that Q1.15 got turned back into: {q115_to_float(float_to_q115(j))}")
+        print("=====Here's a break=====")
+        print()
+
+print("*`*`*`*`*`*`*`*`*`*`*`*`*`*`*`*`*`*`*`*`*`*`*`*`*`*`")
 
 
-for i in range(10):
-    for j in range(3):
-        print(intB10_to_16b_2comp_Binary(i)[j:j+4] + "_", end="")
-    print(intB10_to_16b_2comp_Binary(i)[-4:])
-print("~~~~~~~~~~~")
-print("sharpest tool in the shed.....")
-for i in range(-10, 9, 1):
-    for j in range(3):
-        print(str(float_to_q115(i/10))[j:j+4] + "_", end="")
-    print(str(float_to_q115(i/10))[-4:])
 
+print("Here are some freebies \n")
+print(f"Float to Q1.15: -1.0 \n     {float_to_q115(-1.0)}")
 print()
-print("=============Max positive value (0.999969...)=============")
-print(intB10_to_16b_2comp_Binary(32767))
-print("=============Max negative value (-1.0)=============")
-print(intB10_to_16b_2comp_Binary(-32768))
-
-print("--overflow values--")
-for i in range(0,-10,-1):
-    print(f"=====Int value is: {i - 32764}=====")
-    for j in range(3):
-        print(intB10_to_16b_2comp_Binary(i-32764)[j:j+4] + "_", end="")
-    print(intB10_to_16b_2comp_Binary(i-32764)[-4:])
-
-
-for i in range(10):
-    print(np.binary_repr(np.int16(i)))
+print(f"Float to Q1.15: .5 \n     {float_to_q115(.5)}")
+print()
+print(f"Float to Q1.15: .999969482  \n     {float_to_q115(.999969482)}")
+print() 
+print(f"Q1.15 to float: 0x7FFF (.99...) \n     {q115_to_float(str(0111111111111111))}")
+print() 
+print(f"Q1.15 to float: 0x8000 (-1.0) \n     {q115_to_float(str(1000000000000000))}")
+print() 
+print(f"Q1.15 to float: 0x4000 (.5) \n     {q115_to_float(str(0100000000000000))}")
