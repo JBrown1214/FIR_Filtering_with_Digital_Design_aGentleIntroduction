@@ -8,7 +8,8 @@
 ## Work Block 1: Mastering Fixed-Point Formatting (2 Hours)
 FPGAs lack native floating-point processing units. To perform math on the Tang Nano, you will map floating-point values into 16-bit integers using **Q1.15 format** (1 sign bit, 15 fractional bits).
 
-* **The Math:** * Float to Q1.15: Multiply by $2^{15}$ (32,768) and round to the nearest integer.
+* **The Math:** 
+  * Float to Q1.15: Multiply by $2^{15}$ (32,768) and round to the nearest integer.
   * Q1.15 to Float: Divide by $2^{15}$.
 * **Execution:**
   1. Set up a new Python virtual environment and install `numpy`, `scipy`, and `matplotlib`.
