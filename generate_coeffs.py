@@ -25,15 +25,22 @@ def main():
     fir_coeff_q115 = make_q115_fir_coeffs(fs, fc, taps)
 
     with open("fir_coeffs.hex", "w") as output_file_hex:
+        fir_coeff_hex = []
         for coeff in fir_coeff_q115:
             if coeff > 32768:
                 print("This would've smoked your FPGA logic. " \
                 "   You should check your Q1.15 conversions")
             else:
-                output_file_hex.write(f"0x{coeff:0x}\n")
+                fir_coeff_hex.append(f"{coeff:0x}")
+        output_file_hex.write('\n'.join(fir_coeff_hex))
     
-    with open("fir_coeffs.hex") as f:
-        print(f.read())
+    # with open("fir_coeffs.hex") as f:
+    #     print(f.read())
+    # print()
+    # print(fir_coeff_q115)
+
+
+    
 
 if __name__ == "__main__":
     main()
