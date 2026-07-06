@@ -9,3 +9,6 @@ __pycache__/
 # Personal Files/drafting
 ThePlan/
 TheNotes&Schematics/
+
+# Project Files
+fir_coeffs.hex
