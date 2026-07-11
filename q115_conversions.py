@@ -27,15 +27,48 @@ def float_to_q115(float_in):
     """
 
     # "Left shift" input to be Q115 format
-    int_q115 = round(float_in * 2**15)
+    int_q115 = round(float_in * (2**15))
+
+    if int_q115 > 0:
+        int_q115_messedup = (int_q115 & 0xFFFF)
+        int_q115_doneRight = ((int_q115) & 0xFFFF)
+    elif int_q115 < 0:
+        int_q115_messedup = (int_q115 & 0xFFFF)
+        int_q115_doneRight = -((-int_q115) & 0xFFFF)
+    #TODO: (zero case) does negating zero mess up the code?
+    else: 
+        int_q115_messedup = (int_q115 & 0xFFFF)
+        int_q115_doneRight = -((-int_q115) & 0xFFFF)
+
+
+
+    if int_q115_doneRight != int_q115_messedup:
+        print(f"Ok, problem found with value {int_q115}")
+        print(f"Messed up val is {int_q115_messedup}, doneRight val is {int_q115_doneRight}")
+        print(".................")
+        print(f"{int_q115:0b}")
+        print(f"{0xFFFF:0b}")
+        print(f"{(int_q115 & 0xFFFF):0b}")
+        print("^^^^^ above: messed up value ^^^^^")
+        print(".................")
+        print(f"{(-int_q115):0b}")
+        print(f"{0xFFFF:0b}")
+        print(f"{(-((-int_q115) & 0xFFFF)):0b}")
+        print("^^^^^ above: doneRight value ^^^^^")
+        print()
+
+
+
+
+
 
     # filter to fit representable range
-    if (int_q115 > 32767):
-        int_q115 = 32767
-    elif (int_q115 < -32768):
-        int_q115 = -32768
+    if (int_q115_messedup > 32767):
+        int_q115_messedup = 32767
+    elif (int_q115_messedup < -32768):
+        int_q115_messedup = -32768
     
-    return (int_q115 & 0xFFFF)
+    return (int_q115_messedup & 0xFFFF)
 
 
 def q115_to_float(int_q115):
