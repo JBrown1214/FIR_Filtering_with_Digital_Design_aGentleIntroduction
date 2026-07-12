@@ -1,4 +1,5 @@
-from q115_conversions import float_to_q115, q115_to_float
+from goldenModel.q115_conversions import float_to_q115, q115_to_float
+from generate_coeffs import hexify_float_array
 import numpy as np
 from scipy.signal import kaiserord, lfilter, firwin, freqz
 from pylab import figure, clf, plot, xlabel, ylabel, xlim, ylim, title, grid, axes, show, ion
@@ -19,9 +20,7 @@ taps = 15       # number of taps (int)
 fir_coeff = firwin(taps, cutoff = fc, fs = fs)
 
 
-def generate_messy_wave():
-
-    base_wave = np.sin(np.pi*2*t*freq_base) * amplitude 
+def mess_up_wave(base_wave):
 
     # noising_wave = np.sin(np.pi*2*t*freq_noise)
     
@@ -56,7 +55,7 @@ def FIR_filter(messy_signal):
 def plot_waves(*waves):
     ion()
     for i in range(len(waves)):
-        figure(i+1)
+        figure()
         plot(t, waves[i], linewidth=1)
         xlim(0, duration)
         ylim(-2.15, 2.15)
@@ -66,9 +65,15 @@ def plot_waves(*waves):
 
 
 def main():
-    messy_signal = generate_messy_wave()
+    base_wave = np.sin(np.pi*2*t*freq_base) * amplitude 
+    messy_signal = mess_up_wave(base_wave)
     clean_signal = FIR_filter(messy_signal)
+
+    hexify_float_array(messy_signal, "messy_stimulus")
+    hexify_float_array(base_wave, "expected_output")
+
     show(block=True)
+    
     return clean_signal
 
 if __name__ == "__main__":

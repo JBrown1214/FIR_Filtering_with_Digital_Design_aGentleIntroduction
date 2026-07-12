@@ -3,7 +3,7 @@
 # https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.firwin.html
 
 from scipy.signal import firwin
-from q115_conversions import float_to_q115
+from goldenModel.q115_conversions import float_to_q115
 
 # Constants
 fs = 25e6       # sampling frequency (Hz)

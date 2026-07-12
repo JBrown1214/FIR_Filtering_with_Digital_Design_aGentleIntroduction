@@ -1,4 +1,4 @@
-from q115_conversions import q115_to_float, float_to_q115
+from goldenModel.q115_conversions import q115_to_float, float_to_q115
 
 # Three tests to validate Q115 conversion behavior
 
