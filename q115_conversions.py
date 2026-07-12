@@ -9,6 +9,11 @@ For more on Q number formatting see:
  
 We are using Q1.15, meaning there is one sign bit (+-) and 15 fraction bits 
 Each fractional bit represents 2^-N, this means Q1.15 can represent -1.0 to +0.999969482 
+
+q115 values are represented in the code as integers (which python stores as binary values)
+    e.g. 
+    q115 = 10 (integer 10) is stored as 4'b1010, which sign extends to 0x000A
+    this q115 value is equivalent to the float value +0.00030517578 = (2**-14 + 2**-12)
 """
 import math
 import numpy as np
@@ -17,6 +22,7 @@ import numpy as np
 def float_to_q115(float_in):
     """
     converts a float value to an integer value whose bits map to Q1.15 format
+    Uses python bit masking to cut off values out of bounds (>0.999969... or <-1.0)
 
     Args:
         float_in: input float. Values greater than 1/-1 will be truncated to the nearest value
@@ -27,48 +33,24 @@ def float_to_q115(float_in):
     """
 
     # "Left shift" input to be Q115 format
-    int_q115 = round(float_in * (2**15))
+    magn_q115 = abs(round(float_in * (2**15)))
 
-    if int_q115 > 0:
-        int_q115_messedup = (int_q115 & 0xFFFF)
-        int_q115_doneRight = ((int_q115) & 0xFFFF)
-    elif int_q115 < 0:
-        int_q115_messedup = (int_q115 & 0xFFFF)
-        int_q115_doneRight = -((-int_q115) & 0xFFFF)
-    #TODO: (zero case) does negating zero mess up the code?
+    # Note: from this point onwards, Q1.15 values should always be a positive integer
+    # negative Q1.15 values' will be > 32767, meaning that their binary will start with 'b1XX....XX
+
+    if float_in > 0:
+        int_q115_masked = ((magn_q115) & 0xFFFF)
+    elif float_in < 0:
+        # negate the value
+        int_q115 = (magn_q115 ^ 0xFFFF) + 1
+
+        # bit mask
+        int_q115_masked = int_q115 & 0xFFFF
     else: 
-        int_q115_messedup = (int_q115 & 0xFFFF)
-        int_q115_doneRight = -((-int_q115) & 0xFFFF)
-
-
-
-    if int_q115_doneRight != int_q115_messedup:
-        print(f"Ok, problem found with value {int_q115}")
-        print(f"Messed up val is {int_q115_messedup}, doneRight val is {int_q115_doneRight}")
-        print(".................")
-        print(f"{int_q115:0b}")
-        print(f"{0xFFFF:0b}")
-        print(f"{(int_q115 & 0xFFFF):0b}")
-        print("^^^^^ above: messed up value ^^^^^")
-        print(".................")
-        print(f"{(-int_q115):0b}")
-        print(f"{0xFFFF:0b}")
-        print(f"{(-((-int_q115) & 0xFFFF)):0b}")
-        print("^^^^^ above: doneRight value ^^^^^")
-        print()
-
-
-
-
-
-
-    # filter to fit representable range
-    if (int_q115_messedup > 32767):
-        int_q115_messedup = 32767
-    elif (int_q115_messedup < -32768):
-        int_q115_messedup = -32768
+        int_q115_masked = (magn_q115 & 0xFFFF)
     
-    return (int_q115_messedup & 0xFFFF)
+
+    return (int_q115_masked)
 
 
 def q115_to_float(int_q115):

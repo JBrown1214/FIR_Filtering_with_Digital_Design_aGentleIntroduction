@@ -20,11 +20,13 @@ def hexify_float_array(float_array_in, array_name="input_array"):
     with open(f"{array_name}.hex", "w") as output_file_hex:
         hex_str_array = []
         for q115 in q115_array:
-            if q115 > 32768:
+            # "Smoke test" catch
+            if q115 > 0xFFFF:
                 print("====================")
                 print("-----ERROR: bad Q1.15 value!-----\n" \
-                "This would've smoked your FPGA logic. " \
-                "   You should check your Q1.15 conversions")
+                f"Your Q1.15 value was {q115}, which is greater than 16 bits of binary :/ \n"
+                "that would've smoked your FPGA logic. " \
+                " You should check your Q1.15 conversions")
                 print("====================")
             else:
                 hex_str_array.append(f"{q115:0x}")
