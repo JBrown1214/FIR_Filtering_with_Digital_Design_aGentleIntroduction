@@ -1,6 +1,8 @@
-# Virtual Environments
+# Virtual Environments/Setup
 .venv/
 __init__.py
+pyproject.toml
+fir_rtl_model.egg-info/
 
 # Testing & Tools
 __pycache__/
@@ -11,6 +13,6 @@ ThePlan/
 TheNotes&Schematics/
 
 # Project Files
-fir_coeffs.hex
 messy_stimulus.hex
 expected_output.hex
+fir_coeffs*
