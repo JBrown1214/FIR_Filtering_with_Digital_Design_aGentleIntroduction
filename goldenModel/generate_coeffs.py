@@ -4,43 +4,62 @@
 
 from scipy.signal import firwin
 from goldenModel.q115_conversions import float_to_q115
-
-# Constants
-fs = 25e6       # sampling frequency (Hz)
-fc = 1e6        # cutoff frequency (Hz)
-taps = 15       # number of taps (int)
-fir_coeff = firwin(taps, cutoff = fc, fs = fs)
+from config import *
 
 
-def hexify_float_array(float_array_in, array_name="input_array"):
-    q115_array = []
-    for i in float_array_in:
-        q115_array.append(float_to_q115(i))
+# FIR filter coefficients
+fir_coeff = firwin(TAPS, cutoff = FC, fs = FS)
 
-    with open(f"{array_name}.hex", "w") as output_file_hex:
-        hex_str_array = []
-        for q115 in q115_array:
-            # "Smoke test" catch
+def output_float_array_file(float_array_in, array_name="default_arrayname", output_type="HEX"):
+    if array_name != "default_arrayname":
+        if output_type == 'HEX':
+            q115_array = []
+            for i in float_array_in:
+                q115 = float_to_q115(i)
+                # "Smoke test" catch
+                # TODO: throw an error here, not just print a warning
+                if q115 > 0xFFFF:
+                    print("====================")
+                    print("-----ERROR: bad Q1.15 value!-----\n" \
+                    f"Your Q1.15 value was {q115}, which is greater than 16 bits of binary :/ \n"
+                    "that would've smoked your FPGA logic. " \
+                    " You should check your Q1.15 conversions")
+                    print("====================")
+                q115_array.append(q115)
+            with open(f"{array_name}.hex", "w") as output_file_hex:
+                str_array = []
+                for q115 in q115_array:
+                    str_array.append(f"{q115:0x}")
+                output_file_hex.write('\n'.join(str_array))
+            return q115_array
+        elif output_type == 'DEC' or 'DECIMAL':
+            with open(f"{array_name}_decimal.txt", "w") as output_file_dec:
+                str_array = []
+                for f in float_array_in:
+                    str_array.append(str(f))
+                output_file_dec.write('\n'.join(str_array))
+            return float_array_in
+    else:
+        str_array = []
+        for i in float_array_in:
+            q115 = (float_to_q115(i))
             if q115 > 0xFFFF:
-                print("====================")
-                print("-----ERROR: bad Q1.15 value!-----\n" \
-                f"Your Q1.15 value was {q115}, which is greater than 16 bits of binary :/ \n"
-                "that would've smoked your FPGA logic. " \
-                " You should check your Q1.15 conversions")
-                print("====================")
-            else:
-                hex_str_array.append(f"{q115:0x}")
-        output_file_hex.write('\n'.join(hex_str_array))
-    return hex_str_array
+                str_array.append(f"{q115:0x}")
+
+    return str_array
+
 
 
 def main():
-    hexify_float_array(fir_coeff, "fir_coeffs")
+    output_filename_1 = "fir_coeffs"
+
+    fir_coeff_hex = output_float_array_file(fir_coeff, output_filename_1, "HEX")
+    fir_coeff_dec = output_float_array_file(fir_coeff, output_filename_1, "DEC")
     
-    # with open("fir_coeffs.hex") as f:
+    # with open(f"{output_filename}.hex") as f:
     #     print(f.read())
     # print()
-    # print(fir_coeff_q115)
+    # print(fir_coeff_hex)
 
 
     

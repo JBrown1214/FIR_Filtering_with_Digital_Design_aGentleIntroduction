@@ -11,7 +11,6 @@ FC = 1e6                     # Filter cutoff frequency [Hz]
 TAPS = 47                    # Number of taps (must be odd for Type I/II FIR)
 
 
-
 # Controlling wildcard imports (from config import *)
 __all__ = [
     "FS",

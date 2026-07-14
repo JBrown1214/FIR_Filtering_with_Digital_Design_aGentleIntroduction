@@ -1,30 +1,24 @@
-from goldenModel.q115_conversions import float_to_q115, q115_to_float
-from generate_coeffs import hexify_float_array
 import numpy as np
-from scipy.signal import kaiserord, lfilter, firwin, freqz
-from pylab import figure, clf, plot, xlabel, ylabel, xlim, ylim, title, grid, axes, show, ion
-
+from scipy.signal import firwin
+from pylab import figure, plot, xlabel, ylabel, xlim, ylim, title, grid, axes, show, ion
+from config import *
+from q115_conversions import float_to_q115, q115_to_float
+from generate_coeffs import output_float_array_file
 
 
 # Constants
-freq_base = 100e3                 # wave frequency [Hz]
-fs = 25e6                         # sampling rate [Hz]
-duration = 50e-6                  # duration, [sec]
-amplitude = .5                   # base_wave amplitude [+float]
-Ns = int(fs * duration)           # total number of samples, [+int]
-t = np.arange(Ns) / fs            # timesteps [array[float]]
+Ns = int(FS * DURATION)     # total number of samples, [+int]
+t = np.arange(Ns) / FS      # timesteps [array[float]]
 
-# 15 tap FIR filter coefficients
-fc = 1e6        # cutoff frequency (Hz)
-taps = 15       # number of taps (int)
-fir_coeff = firwin(taps, cutoff = fc, fs = fs)
+# FIR filter coefficients
+fir_coeff = firwin(TAPS, cutoff = FC, fs = FS)
 
 
 def mess_up_wave(base_wave):
 
     # noising_wave = np.sin(np.pi*2*t*freq_noise)
     
-    true_noise = np.random.uniform(low=(-1.0 + amplitude), high= (1-(2**-15)-amplitude), size=Ns)
+    true_noise = np.random.uniform(low=(-1.0 + BASE_WAVE_AMPLITUDE), high= (1-(2**-15)-BASE_WAVE_AMPLITUDE), size=Ns)
 
     messy_wave = base_wave + true_noise
 
@@ -36,16 +30,17 @@ def mess_up_wave(base_wave):
 
 def FIR_filter(messy_signal):
     clean_signal = []
-    # for each y[n] (1-len(messy_signal)):
-        # for each tap (1-15)
-            # sum tap * x[n]
-    
+
     for n in range(len(messy_signal)):
-        y_n = 0.0
+        y_accum = 0
         for tap in range(len(fir_coeff)):
             if n-tap >= 0:
-                y_n += fir_coeff[tap] * messy_signal[n-tap]
-        clean_signal.append(y_n)
+                y_accum += (fir_coeff[tap] * messy_signal[n-tap])
+        # lossy conversion to ensure python golden model values match FPGA
+        clean_signal.append(q115_to_float(float_to_q115(y_accum)))
+    
+    # Note: I likely will have to add padding here to account for the pipeline loading 
+    # at the start of my verilog function (prepend with some zeros)
     
     plot_waves(clean_signal)
 
@@ -56,8 +51,8 @@ def plot_waves(*waves):
     ion()
     for i in range(len(waves)):
         figure()
-        plot(t, waves[i], linewidth=1)
-        xlim(0, duration)
+        plot(t, waves[i], linewidth=.75)
+        xlim(0, DURATION)
         ylim(-2.15, 2.15)
         grid(True)
 
@@ -65,12 +60,17 @@ def plot_waves(*waves):
 
 
 def main():
-    base_wave = np.sin(np.pi*2*t*freq_base) * amplitude 
+    base_wave = np.sin(np.pi*2*t*FREQ_BASE) * BASE_WAVE_AMPLITUDE 
+    print(f"Your signal to noise ratio (db) is: {20 * np.log(BASE_WAVE_AMPLITUDE/(1-BASE_WAVE_AMPLITUDE))}")
     messy_signal = mess_up_wave(base_wave)
     clean_signal = FIR_filter(messy_signal)
 
-    hexify_float_array(messy_signal, "messy_stimulus")
-    hexify_float_array(base_wave, "expected_output")
+
+    output_float_array_file(messy_signal, "messy_stimulus")
+    output_float_array_file(base_wave, "expected_output")
+
+    output_float_array_file(fir_coeff, "fir_coeffs", "HEX")
+    output_float_array_file(fir_coeff, "fir_coeffs", "DEC")
 
     show(block=True)
     
