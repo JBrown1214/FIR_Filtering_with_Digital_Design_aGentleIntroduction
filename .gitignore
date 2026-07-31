@@ -16,3 +16,8 @@ TheNotes&Schematics/
 messy_stimulus.hex
 expected_output.hex
 fir_coeffs*
+
+
+# Verilator/cocotb files
+RTL_Architecture/sim_build/*
+modelsim.ini
