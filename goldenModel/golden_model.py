@@ -67,7 +67,7 @@ def main():
 
 
     output_float_array_file(messy_signal, "messy_stimulus")
-    output_float_array_file(base_wave, "expected_output")
+    output_float_array_file(clean_signal, "expected_output")
 
     output_float_array_file(fir_coeff, "fir_coeffs", "HEX")
     output_float_array_file(fir_coeff, "fir_coeffs", "DEC")
