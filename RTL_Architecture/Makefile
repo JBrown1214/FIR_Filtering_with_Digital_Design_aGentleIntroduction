@@ -1,45 +1,29 @@
-# Makefile
+# ==============================================================================
+# SYSTEMVERILOG FIR FILTER SIMULATION MAKEFILE
+# ==============================================================================
 
-
-# Force Make to use MSYS2 Unix shell instead of CMD on Windows
-SHELL := sh
-
-
-# Bypass Cocotb version check bug for Verilator 5.048
-COCOTB_VERILATOR_SKIP_VERSION_CHECK = 1
-export COCOTB_VERILATOR_SKIP_VERSION_CHECK
-
-# Force Python environment variables for Cocotb on Windows
-export PYTHONPATH := C:/Users/johnn_erba506/Documents/Git/FIR_RTL/.venv/Lib/site-packages
-
-# Simulator selection
 SIM ?= verilator
 TOPLEVEL_LANG ?= verilog
 
-# Point Cocotb directly to the binary executable on Windows
-VERILATOR = verilator_bin.exe
+# RTL & Testbench Setup
+VERILOG_SOURCES     += $(CURDIR)/fir_filter_top.sv
+COCOTB_TOPLEVEL      = fir_filter_top
+COCOTB_TEST_MODULES  = fir_filter_tb
 
-# Verilator args - enable waveform tracing & struct/array expansion
+# Waveform Tracing
 EXTRA_ARGS += --trace --trace-structs
-
-# Use cocotb wave generation
 WAVES = 1
 
-# RTL sources
-VERILOG_SOURCES += $(PWD)/fir_filter_top.sv
+# New (Cocotb 2.0+):
+include $(shell cocotb-config --makefiles)/Makefile.sim
 
-# Top-level module name
-COCOTB_TOPLEVEL = fir_filter_top
 
-# Python test module
-COCOTB_TEST_MODULES = fir_filter_tb
-
-# Custom build output folder
-SIM_BUILD = sim_build
-
-# include cocotb's make rules
-include $(subst \,/,$(shell cocotb-config --makefiles))/Makefile.sim
+# Custom Targets
+.PHONY: waves clean_all
 
 waves:
 	$(MAKE) WAVES=1
 	surfer sim_build/dump.vcd &
+
+clean_all:
+	rm -rf sim_build results.xml *.vcd
