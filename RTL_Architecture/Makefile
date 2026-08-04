@@ -14,16 +14,10 @@ COCOTB_TEST_MODULES  = fir_filter_tb
 EXTRA_ARGS += --trace --trace-structs
 WAVES = 1
 
-# New (Cocotb 2.0+):
+# Include Cocotb's built-in simulation rules
 include $(shell cocotb-config --makefiles)/Makefile.sim
 
-
-# Custom Targets
-.PHONY: waves clean_all
-
+# Custom target for waveform viewing
+.PHONY: waves
 waves:
-	$(MAKE) WAVES=1
 	surfer sim_build/dump.vcd &
-
-clean_all:
-	rm -rf sim_build results.xml *.vcd
