@@ -12,12 +12,15 @@ __pycache__/
 ThePlan/
 TheNotes&Schematics/
 
-# Project Files
+# Generated Project Data Files
 messy_stimulus.hex
 expected_output.hex
 fir_coeffs*
+data_*
 
 
 # Verilator/cocotb files
 RTL_Architecture/sim_build/*
 modelsim.ini
+RTL_Architecture/dump.vcd
+RTL_Architecture/results.xml
