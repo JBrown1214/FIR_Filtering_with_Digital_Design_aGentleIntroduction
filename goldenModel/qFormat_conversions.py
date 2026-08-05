@@ -50,7 +50,7 @@ from config import *
 #     qFormat_HEX_MAX_NEG = 0x8000
 #     qFormat_HEX_MAX_INT = 0xFFFF
 
-def float_to_qFormat(float_in, intbit = 0, fracbit = 15):
+def float_to_qFormat(float_in, intbit = 1, fracbit = 15):
     """
     converts a float value to an integer value whose bits map to qFormat
     """
