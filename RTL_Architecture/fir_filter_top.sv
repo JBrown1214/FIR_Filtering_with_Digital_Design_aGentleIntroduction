@@ -4,6 +4,30 @@ module fir_filter_top(
     input logic signed [15:0] data_in, 
     output logic signed [22:0] data_out           // Q8.15 * 1
 );
+/*============ a note on notation ============
+    I am using Q number formatting (see: https://en.wikipedia.org/wiki/Q_(number_format))
+    More specifically: I am using ARM style Q number formating. 
+
+    All Q number formats use "U" sign bits (-2^0), "m" integer bits (2^m), and "n" fractional bits (2^-n)
+    To quote wikipedia: 
+        """
+        The Q notation... consists of the letter Q followed by a pair 
+        of numbers m.n, where m is the number of bits used for the integer part of the value, 
+        and n is the number of fraction bits.
+
+        By default, the notation describes signed binary fixed point format, with the unscaled integer 
+        being stored in two's complement format, used in most binary processors. As such, the first bit 
+        always gives the sign of the value (1 = negative, 0 = non-negative), and it is not counted
+        in the m parameter. Thus, the total number w of bits used is 1 + m + n.
+
+        In particular, when n is zero, the numbers are just integers. If m is zero, all bits except the 
+        sign bit are fraction bits; then the range of the stored number is from −1.0 (inclusive) to +1.0 (exclusive).
+        """
+
+    According to the ARM variant of Q notation, the sign bit and integer bit(s) are added together
+        e.g. Q1.15 is 1 sign bit  + (0 integer bits) + 15 fractional bits (2^-1 through 2^-15).
+============================================*/
+
 // 47 taps + 24 coefficients (1 coeff for each pair + 1 coeff for the middle value at index 23)
 logic signed [15:0] x_reg [0:46];           // Q1.15
 logic signed [15:0] coeff_regs [0:23];      // Q1.15

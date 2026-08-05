@@ -1,9 +1,12 @@
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 import numpy as np
 from scipy.signal import firwin
 from pylab import figure, plot, xlabel, ylabel, xlim, ylim, title, grid, axes, show, ion
 from config import *
-from q115_conversions import float_to_q115, q115_to_float
-from generate_coeffs import output_float_array_file
+from goldenModel.qFormat_conversions import float_to_qFormat, qFormat_to_float
+from goldenModel.generate_coeffs import output_float_array_file
 
 
 # Constants
@@ -37,7 +40,7 @@ def FIR_filter(messy_signal):
             if n-tap >= 0:
                 y_accum += (fir_coeff[tap] * messy_signal[n-tap])
         # lossy conversion to ensure python golden model values match FPGA
-        clean_signal.append(q115_to_float(float_to_q115(y_accum)))
+        clean_signal.append(qFormat_to_float(float_to_qFormat(y_accum,7,15),7,15)) #? Q-format fixed?
     
     # Note: I likely will have to add padding here to account for the pipeline loading 
     # at the start of my verilog function (prepend with some zeros)
@@ -63,13 +66,14 @@ def main():
     base_wave = np.sin(np.pi*2*t*FREQ_BASE) * BASE_WAVE_AMPLITUDE 
     print(f"Your signal to noise ratio (db) is: {20 * np.log(BASE_WAVE_AMPLITUDE/(1-BASE_WAVE_AMPLITUDE))}")
     messy_signal = mess_up_wave(base_wave)
-    clean_signal = FIR_filter(messy_signal)
+    clean_signal = FIR_filter(messy_signal) #? Q-format fixed?
 
+    #! Potential Q-probs in output_float_array_file()
+     #? Q-format fixed? (technically fine becase this func is never called with -1<vals<1)
+    output_float_array_file(messy_signal, "messy_stimulus") #?
+    output_float_array_file(clean_signal, "expected_output") #?
 
-    output_float_array_file(messy_signal, "messy_stimulus")
-    output_float_array_file(clean_signal, "expected_output")
-
-    output_float_array_file(fir_coeff, "fir_coeffs", "HEX")
+    output_float_array_file(fir_coeff, "fir_coeffs", "HEX") #?
     output_float_array_file(fir_coeff, "fir_coeffs", "DEC")
 
     show(block=True)
