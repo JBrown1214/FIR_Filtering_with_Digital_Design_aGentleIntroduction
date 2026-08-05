@@ -2,10 +2,11 @@ module fir_filter_top(
     input logic clk,
     input logic rst_n,                      // rst"_n" means we are using active low reset
     input logic signed [15:0] data_in, 
-    output logic signed [22:0] data_out           // Q8.15 * 1
+    output logic signed [15:0] data_out           // Q1.15 * 1
 );
 /*============ a note on notation ============
     I am using Q number formatting (see: https://en.wikipedia.org/wiki/Q_(number_format))
+    
     More specifically: I am using ARM style Q number formating. 
 
     All Q number formats use "U" sign bits (-2^0), "m" integer bits (2^m), and "n" fractional bits (2^-n)
@@ -51,7 +52,7 @@ logic signed [18:0] Accum_reg_24to12 [0:11];// Q4.15 * 12
 logic signed [19:0] Accum_reg_12to6 [0:5];  // Q5.15 * 6
 logic signed [20:0] Accum_reg_6to3 [0:2];   // Q6.15 * 3
 logic signed [21:0] Accum_reg_3to2 [0:1];   // Q7.15 * 1 + Q6.15 * 1 (reg for both vals is needed for pipeline)
-//logic signed [22:0] data_out;         // Q8.15 * 1    (previous defined)
+//logic signed [22:0] data_out;             // Q1.15 * 1    (previous defined)
 
 
 always_ff @(posedge clk or negedge rst_n) begin : main
@@ -67,7 +68,7 @@ always_ff @(posedge clk or negedge rst_n) begin : main
             for (int i = 0; i < 6; i++) Accum_reg_12to6[i] <= 20'sh0000;
             for (int i = 0; i < 3; i++) Accum_reg_6to3[i] <= 21'sh0000;
             for (int i = 0; i < 2; i++) Accum_reg_3to2[i] <= 22'sh0000;
-            data_out <= 23'sh0000;
+            data_out <= 16'sh0000;
         end 
     else begin
         //* ==========data_in Shift Register Array (1 clock)==========
@@ -103,7 +104,7 @@ always_ff @(posedge clk or negedge rst_n) begin : main
         end
         Accum_reg_3to2[0] <= Accum_reg_6to3[0] + Accum_reg_6to3[1];
         Accum_reg_3to2[1] <= 22'(Accum_reg_6to3[2]);
-        data_out <= Accum_reg_3to2[0] + Accum_reg_3to2[1];
+        data_out <= 16'(Accum_reg_3to2[0] + Accum_reg_3to2[1]);
     end
 end
 

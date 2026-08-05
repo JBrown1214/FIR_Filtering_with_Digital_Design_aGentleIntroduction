@@ -42,7 +42,7 @@ async def fir_filter_tb(dut):
 
     # 4. Drive inputs and collect outputs
     error_count = 0
-    pipeline_delay = 24  # adjust to match your FIR filter's latency
+    pipeline_delay = 9  # adjust to match your FIR filter's latency
     recieved_output = []
 
     for i, val in enumerate(stimulus):
