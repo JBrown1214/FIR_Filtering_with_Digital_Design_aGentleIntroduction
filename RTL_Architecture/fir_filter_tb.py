@@ -45,6 +45,11 @@ async def fir_filter_tb(dut):
     pipeline_delay = 9  # adjust to match your FIR filter's latency
     recieved_output = []
 
+
+    delta_L = [.1,9999999]
+    delta_S = [1000,0]
+    weird_deltas = {}
+
     for i, val in enumerate(stimulus):
         dut.data_in.value = val
         await RisingEdge(dut.clk) # Check output after pipeline latency
@@ -54,13 +59,27 @@ async def fir_filter_tb(dut):
         recieved_output.append(actual)
         if i >= pipeline_delay:
             expected = golden[i - pipeline_delay]
+            delta = actual - expected
             
             if actual != expected:
-                cocotb.log.error(f"MISMATCH at sample {i}: Expected {hex(expected)}, Got {hex(actual)}")
+                if abs(delta) < abs(delta_S[0]):
+                    delta_S[0] = delta
+                    delta_S[1] = i
+                elif abs(delta) > abs(delta_L[0]):
+                    delta_L[0] = delta
+                    delta_L[1] = i
+                if abs(delta) > 32:
+                    weird_deltas[i] = delta
+                if abs(delta) < 4:
+                    weird_deltas[i] = delta
+                cocotb.log.error(f"MISMATCH at sample {i}: Expected {hex(expected)}, Got {hex(actual)}, Delta {actual -expected}")
                 error_count += 1
             elif actual == expected:
                 cocotb.log.error(f" ✅ MATCH at sample {i}: Expected {hex(expected)}, Got {hex(actual)}")
-
+    print(f"Largest delta is {delta_L[0]} at sample {delta_L[1]}")
+    print(f"Smallest delta is {delta_S[0]} at sample {delta_S[1]}")
+    print(f"WEIRD deltas")
+    print(weird_deltas)
     assert error_count == 0, f"Test failed with {error_count} mismatches!"
     plot_waves(stimulus)
     plot_waves(recieved_output)

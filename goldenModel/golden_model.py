@@ -5,7 +5,7 @@ import numpy as np
 from scipy.signal import firwin
 from pylab import figure, plot, xlabel, ylabel, xlim, ylim, title, grid, axes, show, ion
 from config import *
-from goldenModel.qFormat_conversions import float_to_qFormat, qFormat_to_float
+from goldenModel.qFormat_conversions import float_to_qFormat, qFormat_to_float, lossy_conversion
 from goldenModel.generate_coeffs import output_float_array_file
 
 
@@ -35,15 +35,20 @@ def FIR_filter(messy_signal):
     clean_signal = []
 
     for n in range(len(messy_signal)):
+
         y_accum = 0
         for tap in range(len(fir_coeff)):
             if n-tap >= 0:
-                y_accum += (fir_coeff[tap] * messy_signal[n-tap])
-        # lossy conversion to ensure python golden model values match FPGA
-        clean_signal.append(qFormat_to_float(float_to_qFormat(y_accum,7,15),7,15)) #? Q-format fixed?
-    
-    # Note: I likely will have to add padding here to account for the pipeline loading 
-    # at the start of my verilog function (prepend with some zeros)
+                product = (lossy_conversion(fir_coeff[tap]) * lossy_conversion(messy_signal[n-tap]))
+
+                # lossy conversion to ensure python golden model values match FPGA
+                product_lossful = lossy_conversion(product)
+                # # DEBUGGING HELPER:
+                # if product_lossful >= 1:
+                #     print(f"product: {product} || product_lossful:{product_lossful}")
+                
+                y_accum += product_lossful
+        clean_signal.append(lossy_conversion(y_accum,7,15)) #? Q-format fixed?
     
     plot_waves(clean_signal)
 
@@ -68,7 +73,6 @@ def main():
     messy_signal = mess_up_wave(base_wave)
     clean_signal = FIR_filter(messy_signal) #? Q-format fixed?
 
-    #! Potential Q-probs in output_float_array_file()
      #? Q-format fixed? (technically fine becase this func is never called with -1<vals<1)
     output_float_array_file(messy_signal, "messy_stimulus") #?
     output_float_array_file(clean_signal, "expected_output") #?

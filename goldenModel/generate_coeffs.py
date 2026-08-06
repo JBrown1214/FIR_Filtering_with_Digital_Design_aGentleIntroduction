@@ -22,13 +22,6 @@ def output_float_array_file(float_array_in, array_name="default_arrayname", outp
             qFormat_array = []
             for i in float_array_in:
                 qFormat = float_to_qFormat(i) #? Q-format fixed? (technically fine becase this func is never called with -1<vals<1)
-                if qFormat > 0xFFFF:
-                    print("====================")
-                    print("-----ERROR: bad qFormat value!-----\n" \
-                    f"Your qFormat value was {qFormat}, which is greater than 16 bits of binary :/ \n"
-                    "that would've smoked your FPGA logic. " \
-                    " You should check your qFormat conversions")
-                    print("====================")
                 qFormat_array.append(qFormat)
                 
             with open(file_path, "w") as output_file_hex:

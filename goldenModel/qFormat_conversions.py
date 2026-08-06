@@ -62,31 +62,30 @@ def float_to_qFormat(float_in, intbit = 1, fracbit = 15):
 
 
     Qformat_int = round(float_in * (2**fracbit))
-
-    # "Left shift" input to be Q format
-    magn_float_in = abs(Qformat_int)
-
+    magn_Qformat_int = abs(Qformat_int)
+    if Qformat_int == 0:
+        return 0
 
     if float_in > 0:
-        maxval_mask = (1 << (fracbit + intbit - 1)) - 1
+        maxval_mask = (1 << (fracbit + intbit - 1)) - 1     #0x7FFF
     elif float_in < 0:
-        maxval_mask = (1 << (fracbit + intbit - 1))
+        maxval_mask = (1 << (fracbit + intbit - 1))         #0x8000
     else: 
         return 0
     
-    if (magn_float_in > maxval_mask):
+    if (magn_Qformat_int > maxval_mask):
         if float_in < 0:
-            mask_ones = (1 << (fracbit + intbit)) - 1
+            mask_ones = (1 << (fracbit + intbit)) - 1       #0xFFFF
             return ((maxval_mask ^ mask_ones)+1) # 2s comp flip
         return maxval_mask
     else:
         if float_in < 0:
-            mask_ones = (1 << (fracbit + intbit)) - 1
-            return ((magn_float_in ^ mask_ones)+1) # 2s comp flip
+            mask_ones = (1 << (fracbit + intbit)) - 1       #0xFFFF
+            return ((magn_Qformat_int ^ mask_ones)+1) # 2s comp flip
         return (Qformat_int)
 
 
-def qFormat_to_float(int_qFormat, intbit = 0, fracbit = 15):
+def qFormat_to_float(int_qFormat, intbit = 1, fracbit = 15):
     """
     converts an integer representing a qFormat value into a float
     """
@@ -97,13 +96,19 @@ def qFormat_to_float(int_qFormat, intbit = 0, fracbit = 15):
     if fracbit < 0:
         print("cannot have negative number of fractional bits in q-format")
 
-    isNegative = (int_qFormat >> (fracbit + intbit - 1)) & 1
+    isNegative = (int(int_qFormat) >> (fracbit + intbit - 1)) & 1
+    mask_ones = (1 << (fracbit + intbit)) - 1       #0xFFFF
 
     if isNegative: 
-        mask_ones = (1 << (fracbit + intbit)) - 1
         return -((int_qFormat ^ mask_ones)+1)/(2**fracbit) # 2s comp flip
     else: 
-        return (int_qFormat/(2**fracbit))
+        return ((int_qFormat)/(2**fracbit))
+
+
+def lossy_conversion(float_in, intbit = 1, fracbit = 15):
+    return (qFormat_to_float(float_to_qFormat(float_in, intbit, fracbit), intbit, fracbit))
+
+
 
 def main():
     for i in range(21):
