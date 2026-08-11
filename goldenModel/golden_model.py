@@ -41,16 +41,13 @@ def FIR_filter(messy_signal):
         for tap in range(len(fir_coeff)):
             if n-tap >= 0:
                 product = (lossy_conversion(fir_coeff[tap]) * lossy_conversion(messy_signal[n-tap]))
-
-                # lossy conversion to ensure python golden model values match FPGA
-                product_lossful = lossy_conversion(product)
-                # # DEBUGGING HELPER:
-                # if product_lossful >= 1:
-                #     print(f"product: {product} || product_lossful:{product_lossful}")
+                # lossy conversion of inputs to ensure python golden model values match FPGA
                 
-                y_accum += product_lossful
+                y_accum += product # sum without rounding to match FPGA
+
+        # round all to Q1.15 only at the very end of summation 
         clean_signal.append(lossy_conversion(y_accum,7,15)) #? Q-format fixed?
-    
+
     plot_waves(clean_signal, seed="GoldenOUT_")
 
     return clean_signal
