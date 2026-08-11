@@ -1,9 +1,10 @@
 import sys
+from datetime import datetime
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 import numpy as np
 from scipy.signal import firwin
-from pylab import figure, plot, xlabel, ylabel, xlim, ylim, title, grid, axes, show, ion
+import matplotlib.pyplot as plt
 from config import *
 from goldenModel.qFormat_conversions import float_to_qFormat, qFormat_to_float, lossy_conversion
 from goldenModel.generate_coeffs import output_float_array_file
@@ -50,21 +51,81 @@ def FIR_filter(messy_signal):
                 y_accum += product_lossful
         clean_signal.append(lossy_conversion(y_accum,7,15)) #? Q-format fixed?
     
-    plot_waves(clean_signal)
+    plot_waves(clean_signal, seed="GoldenOUT_")
 
     return clean_signal
 
 
-def plot_waves(*waves):
-    ion()
-    for i in range(len(waves)):
-        figure()
-        plot(t, waves[i], linewidth=.75)
-        xlim(0, DURATION)
-        ylim(-2.15, 2.15)
-        grid(True)
+def plot_waves(*waves, seed="", overlay=False, dynamic_ylims=False):
+    output_dir = Path("output_plots")
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-    show()
+    # setup plot for overlap or not
+    if overlay:
+        figures = [
+            (list(enumerate(waves)), "Overlaid Waves", f"{seed}waves_overlay.png")
+        ]
+    else:
+        figures = [
+            ([(i, wave)], f"Wave {i + 1}", f"{seed}wave_{i + 1}.png")
+            for i, wave in enumerate(waves)
+        ]
+
+    # Plot everything
+    for wave_group, title, filename in figures:
+        fig, ax = plt.subplots()
+
+        for idx, wave in wave_group:
+            ax.plot(range(len(wave)), wave, linewidth=0.75, label=f"Wave {idx + 1}")
+
+        if dynamic_ylims:
+            ax.autoscale(axis="x")
+            ax.margins(y=0.10)
+        else:
+            ax.set_ylim(-2.15, 2.15)
+        ax.grid(True)
+        ax.set_title(title)
+        if overlay:
+            ax.legend(loc="upper right")
+
+        filepath = output_dir / filename
+        fig.savefig(filepath, bbox_inches="tight", dpi=300)
+        print(f"Saved: {filepath}")
+
+        plt.close(fig)
+
+    return output_dir
+
+
+def plot_delta_histogram(delta_count, filename="delta_histogram.png"):
+    # Sort keys numerically so the chart reads logically left-to-right
+    sorted_pairs = sorted(delta_count.items(), key=lambda item: int(item[0]))
+
+    # Convert keys to str for equal bar widths
+    x_categories = [str(k) for k, v in sorted_pairs]
+    y_counts = [v for k, v in sorted_pairs]
+
+    fig, ax = plt.subplots()
+    ax.bar(x_categories, y_counts, color="royalblue", edgecolor="black")
+
+    max_y = max(y_counts) if y_counts else 1
+    ax.set_ylim(0, max_y * 1.15)
+
+    ax.set_title("Error Delta Distribution")
+    ax.set_xlabel("Delta Value")
+    ax.set_ylabel("Occurrences")
+    ax.grid(axis="y", linestyle="--", alpha=0.7)
+
+    output_path = Path("output_plots") / filename
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    fig.savefig(output_path, bbox_inches="tight", dpi=300)
+    plt.close(fig)  # Free memory
+    print(f"Saved histogram to: {output_path}")
+
+
+
+
 
 
 def main():
@@ -80,7 +141,6 @@ def main():
     output_float_array_file(fir_coeff, "fir_coeffs", "HEX") #?
     output_float_array_file(fir_coeff, "fir_coeffs", "DEC")
 
-    show(block=True)
     
     return clean_signal
 
