@@ -61,7 +61,7 @@ def float_to_qFormat(float_in, intbit = 1, fracbit = 15):
         print("cannot have negative number of fractional bits in q-format")
 
 
-    Qformat_int = round(float_in * (2**fracbit))
+    Qformat_int = math.floor(float_in * (2**fracbit))
     magn_Qformat_int = abs(Qformat_int)
     if Qformat_int == 0:
         return 0
