@@ -1,7 +1,5 @@
 # Virtual Environments/Setup
 .venv/
-__init__.py
-pyproject.toml
 fir_rtl_model.egg-info/
 
 # Testing & Tools

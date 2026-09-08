@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fir_rtl_model"
+version = "0.1.0"
+
+[tool.setuptools]
+# ONLY include actual Python source folders
+packages = ["goldenModel"]
+# Include standalone Python files at the root
+py-modules = ["config"]
