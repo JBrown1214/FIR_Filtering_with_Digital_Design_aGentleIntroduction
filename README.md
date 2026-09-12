@@ -1,31 +1,27 @@
 # FIR Filter RTL Implementation
 
 *last updated: 9/11/2026*
-*last updated: 9/11/2026*
 
 ---
----
-Welcome to my digital design project! This repository contains my work on building a 47-tap Finite Impulse Response (FIR) filter in SystemVerilog. 
+Welcome to my repo! This project contains my work on building a 47-tap Finite Impulse Response (FIR) filter in SystemVerilog. 
 
 
-**Note on AI**: AI is not being used for Verilog code generation, and is being used sparingly for python code/housekeeping. As this is one of my first Verilog projects, I would rather push messier, beginner Verilog code that **I wrote** than a streamlined repo of AI content that I don't understand. I hope that a scan through my commit history, comments, and code, will demonstrate the intention I have put into the learning process of this project. 
 
 ## Intro & Project Background
+I chose this project as a self-guided introduction to verilog as a beginner at digital design. I learned a little Verilog in ECE 352 (intro to digital design), and brushed up my Verilog in the early summer of 2026 with HDLbits.com. This project was inspired greatly by ECE 352 and ECE 203 (intro to signal processing). This semester (Fall 2026) I am taking ECE 551, which is more Verilog intensive, and this project was great self-study to prepare myself.  
+[FIR filters](https://en.wikipedia.org/wiki/Finite_impulse_response) and [Q-format notation](https://support.arm.com/documentation/dui0066/f/axd/axd-facilities/data-formatting/q-format) are key parts of my project, understanding them both is crucial to understanding my design choices. 
 
 **Note on AI**: AI is not being used for Verilog code generation, and is being used sparingly for python code/housekeeping. As this is one of my first Verilog projects, I would rather push messier, beginner Verilog code that **I wrote** than a streamlined repo of AI content that I don't understand. I hope that a scan through my commit history, comments, and code, will demonstrate the intention I have put into the learning process of this project. 
-
-## Intro & Project Background
-I chose this project as a self-guided introduction to verilog as a beginner at digital design. I learned a little Verilog in ECE 352 (intro to digital design), and brushed up my Verilog in the early summer of 2026 with HDLbits.com. This project was inspired greatly by ECE 352 and ECE 203 (intro to signal processing). This semester (Fall 2026) I am taking ECE 551, which is more Verilog intensive, and this project was great self-study to prepare myself. 
 
 ## Project Status
 
-Currently, the **SystemVerilog RTL** and the **Golden Model (Python)** are fully aligned at the bit-accurate level after successfully resolving rounding biases. 
 Currently, the **SystemVerilog RTL** and the **Golden Model (Python)** are fully aligned at the bit-accurate level after successfully resolving rounding biases. 
 
 ### What's Done
 * **RTL Architecture Design**: 
     * Scaled the architecture from an initial 15-tap parallel filter to a more complex 47-tap FIR filter.
-    * Designed and refactored the data path into a pipelined tree structure to optimize timing (see `Notes/` FIRf diagram 1, FIRf diagram 2).
+    * Designed and refactored the data path into a pipelined tree structure to optimize timing 
+        * see `Notes/` FIRf diagram 1, FIRf diagram 2 (and the diagram below) to see the design evolution.
     * Completed the SystemVerilog implementation (`RTL_Architecture/fir_filter_top.sv`).
     * Design outline below: 
 
@@ -113,28 +109,18 @@ Currently, the **SystemVerilog RTL** and the **Golden Model (Python)** are fully
     ```
 
 
-* **Verification Stack Setup (`/RTL_Architecture`)**: 
-    * Configured a modern, open-source verification flow using **Verilator**/**Modelsim** (Simulation/Linting), **cocotb** (testing), and **Surfer** (waveform viewer).
-        * I use ModelSim/QuestaSim in classes, so my aim is to use my own VScode based setup
-    * Python-based testbenches (`pytest` for the golden model, `cocotb` for the RTL) are up and running.
 
 
 
-
-
-
-* **Golden Model & Hardware Alignment**: 
-    * Resolved the 11.5 LSB accumulated truncation delta by matching Python's rounding behavior with the Verilog RTL's. (Round ONCE, at the END). 
+* **Verification: Golden Model & Hardware Alignment**: 
+    * Resolved the 11.5 LSB accumulated truncation delta by matching Python's rounding behavior (.5LSB innaccuracy) with the Verilog RTL's (previously 12LSB).  
         * See the process: [**Finding the bug**](https://github.com/JBrown1214/FIR_Filtering_with_Digital_Design_aGentleIntroduction/commit/fc3f80233fb0e2194166b9dd3f98c768d136b8b1) and [**The results of the fix**](https://github.com/JBrown1214/FIR_Filtering_with_Digital_Design_aGentleIntroduction/commit/ad830034589e2283fc720ae5643af5935ee0f846)
-    * Achieved complete bit-accurate consistency between the Python reference model and the hardware implementation, tested with cocotb (`RTL_Architecture/fir_filter_tb.py`)
-        * <img src="./Notes/cocotb_goldenModel_RTL_alignment.png" alt="Screenshot of Passing tb" width="600"/>
+    * Achieved complete bit-accurate consistency between the Python reference model and the hardware implementation, tested with cocotb (`RTL_Architecture/fir_filter_tb.py`):
+        * Passing test (`/RTL_Architecture/fir_fitlertb.py`)
+        <img src="./Notes/cocotb_goldenModel_RTL_alignment.png" alt="Screenshot of Passing tb" width="600"/>
     
 
 ### What I'm Working On Next
-* **Synthetic Noise Engine**: 
-    * Implement an on-chip Direct Digital Synthesis (DDS) sine wave generator and a Linear Feedback Shift Register (LFSR) noise source to stream data into the FIR filter at 25 MHz.
-* **Dual-Buffer BRAM Storage**: 
-    * Instantiate a True Dual-Port Gowin Block RAM (BRAM) IP block to store circular buffers of concurrent raw and filtered data waveforms.  
 * **Synthetic Noise Engine**: 
     * Implement an on-chip Direct Digital Synthesis (DDS) sine wave generator and a Linear Feedback Shift Register (LFSR) noise source to stream data into the FIR filter at 25 MHz.
 * **Dual-Buffer BRAM Storage**: 
@@ -148,21 +134,11 @@ Currently, the **SystemVerilog RTL** and the **Golden Model (Python)** are fully
 * `tests/`: `pytest` suite for the Python golden model and Q1.15 math logic.
 
   
-* `goldenModel/`: Python reference model, Q1.15 fixed-point conversion scripts, and test vector generation.
-* `RTL_Architecture/`: SystemVerilog source files (`.sv`), cocotb testbenches, and the Makefile for simulation.
-* `Notes/`: FPGA schematics, handwritten project diagrams
-    * `FIRf diagram 1/2`: Architecture plans and visual diagrams (e.g., pipelining strategies).
-* `tests/`: `pytest` suite for the Python golden model and Q1.15 math logic.
-
-  
 ## Tech Stack
-*   **Hardware Description**: SystemVerilog (Verilator simulation)
 *   **Hardware Description**: SystemVerilog (Verilator simulation)
 *   **Modeling & Scripting**: Python, NumPy, SciPy
 *   **Verification**: [cocotb](https://github.com/cocotb/cocotb), [Verilator](https://github.com/verilator/verilator), pytest
 *   **Waveform Viewer**: [Surfer](https://gitlab.com/surfer-project/surfer)
-*   **Verification**: [cocotb](https://github.com/cocotb/cocotb), [Verilator](https://github.com/verilator/verilator), pytest
-*   **Waveform Viewer**: [Surfer](https://gitlab.com/surfer-project/surfer)
 
 ---
-*Feel free to poke around the commit history to see how the architecture has evolved. I am actively pushing updates as I build out the RTL!*
+*Feel free to poke around the commit history to see how the architecture has evolved. I am actively pushing updates as I continue working*
