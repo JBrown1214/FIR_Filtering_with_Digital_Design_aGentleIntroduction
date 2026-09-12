@@ -5,18 +5,37 @@
 ---
 Welcome to my repo! This project contains my work on building a 47-tap Finite Impulse Response (FIR) filter in SystemVerilog. 
 
-<img src="output_plots/wave_1.png" alt="base sine wave" width="300"/>
-<img src="output_plots/wave_2.png" alt="random noise" width="300"/>
+<table>
+  <tr>
+    <td align="center">
+      <img src="output_plots/wave_1.png" alt="base sine wave" width="100%" />
+      <br />
+      <sub><b>a) base sine wave</b></sub>
+    </td>
+    <td align="center">
+      <img src="output_plots/wave_2.png" alt="random noise" width="100%" />
+      <br />
+      <sub><b>b) random noise</b></sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="output_plots/wave_3.png" alt="noisy sine wave" width="100%" />
+      <br />
+      <sub><b>c) noisy sine wave (FIR filter input)</b></sub>
+    </td>
+    <td align="center">
+      <img src="output_plots/GoldenOUT_wave_1.png" alt="golden model output" width="100%" />
+      <br />
+      <sub><b>d) cleaned wave (python Golden Model output)</b></sub>
+    </td>
+  </tr>
+</table>
 
-
-<img src="output_plots/wave_3.png" alt="noisy sine wave" width="300"/>
-<img src="output_plots/GoldenOUT_wave_1.png" alt="golden model output" width="300"/>  
-
-
-^^ Above $\begin{bmatrix} a & b \\ c & d \end{bmatrix}$ : a) sine wave, b) random noise, c) noisy sine wave (FIR filter input), d) cleaned wave (python Golden Model output)  
 Below: Overlay of python Golden Model output and RTL model output. Note the clock delay as the Verilog pipeline fills up. 
 
 <img src="RTL_Architecture/output_plots/tb_plot_overlayOUT_waves_overlay.png" alt="Python Golden Model x Verilog overlay (9 clock difference)" width="600"/>
+
 
 
 ## Intro & Project Background
