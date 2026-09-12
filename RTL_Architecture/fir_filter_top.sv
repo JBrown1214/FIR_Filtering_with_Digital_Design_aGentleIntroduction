@@ -43,16 +43,13 @@ logic signed [16:0] pre_add_regs [0:23];    // Q2.15: 1`sign + 1'overflow + 15'f
     // (2' of overflow is required in the case of -2 * -1 = 2)
 logic signed [32:0] product_regs [0:23];    // Q3.30: 1'signb + 2'intoverflow + 30'fracb)
 
-// 24 Right shift registers to store the result of the "rounding" Rshift operation (needed for pipelining)
-logic signed [17:0] Rshift_regs [0:23];     // Q3.15
-
 // registers for each clock cycle of the pipeline accumulator
 // we need to add an overflow bit for every addition to safeguard the theoretical worst case. 
-logic signed [18:0] Accum_reg_24to12 [0:11];// Q4.15 * 12
-logic signed [19:0] Accum_reg_12to6 [0:5];  // Q5.15 * 6
-logic signed [20:0] Accum_reg_6to3 [0:2];   // Q6.15 * 3
-logic signed [21:0] Accum_reg_3to2 [0:1];   // Q7.15 * 1 + Q6.15 * 1 (reg for both vals is needed for pipeline)
-//logic signed [22:0] data_out;             // Q1.15 * 1    (previous defined)
+logic signed [33:0] Accum_reg_24to12 [0:11];// Q4.30 * 12
+logic signed [34:0] Accum_reg_12to6 [0:5];  // Q5.30 * 6
+logic signed [35:0] Accum_reg_6to3 [0:2];   // Q6.30 * 3
+logic signed [36:0] Accum_reg_3to2 [0:1];   // Q7.30 * 1 + Q6.30 * 1 (reg for both vals is needed for pipeline)
+logic signed [37:0] Accum_reg_2to1;         // Q8.30 * 1 
 
 
 always_ff @(posedge clk or negedge rst_n) begin : main
@@ -63,11 +60,11 @@ always_ff @(posedge clk or negedge rst_n) begin : main
             for (int i = 0; i < 24; i++) coeff_regs[i] <= 16'sh0000;
             for (int i = 0; i < 24; i++) pre_add_regs[i] <= 17'sh0000;
             for (int i = 0; i < 24; i++) product_regs[i] <= 33'sh0000;
-            for (int i = 0; i < 24; i++) Rshift_regs[i] <= 18'sh0000;
-            for (int i = 0; i < 12; i++) Accum_reg_24to12[i] <= 19'sh0000;
-            for (int i = 0; i < 6; i++) Accum_reg_12to6[i] <= 20'sh0000;
-            for (int i = 0; i < 3; i++) Accum_reg_6to3[i] <= 21'sh0000;
-            for (int i = 0; i < 2; i++) Accum_reg_3to2[i] <= 22'sh0000;
+            for (int i = 0; i < 12; i++) Accum_reg_24to12[i] <= 34'sh0000;
+            for (int i = 0; i < 6; i++)  Accum_reg_12to6[i] <= 35'sh0000;
+            for (int i = 0; i < 3; i++)  Accum_reg_6to3[i] <= 36'sh0000;
+            for (int i = 0; i < 2; i++)  Accum_reg_3to2[i] <= 37'sh0000;
+            Accum_reg_2to1 <= 38'sh0000;
             data_out <= 16'sh0000;
         end 
     else begin
@@ -76,38 +73,47 @@ always_ff @(posedge clk or negedge rst_n) begin : main
         for (int i = 1; i < 47; i++) begin      // shift by one (take in new datapoint)
             x_reg[i] <= x_reg[i-1];
         end
-
+        // ======================================================================
         //* ==========Pipelined Pre-Adder & Multiplier Layer (3 clocks)==========
-        //PRE_ADD
+        // ======================================================================
+
+        //PRE_ADD       (Q1.15 + Q1.15 == Q2.15)
         for (int i = 0; i <23; i++) begin : Pre_Adder      
             pre_add_regs[i] <= x_reg[i] + x_reg[46-i];
         end
         pre_add_regs[23] <= 17'(x_reg[23]);          // keep x[23] in-time with other x_reg values (not a clock behind)
 
-        // MULTIPLY
+        // MULTIPLY     (Q2.15 * Q1.15 == Q3.30)
         for (int i = 0; i <24; i++) begin : Multiplier      
             product_regs[i] <= pre_add_regs[i] * coeff_regs[i];
         end
 
-        // RIGHT SHIFT
-        for (int i = 0; i <24; i++) begin : Right_shift      
-            Rshift_regs[i] <= 18'(product_regs[i] >>> 15);
-        end
-
+        // ===========================================================
         //* ==========Pipelined Accumulator Layer (5 clocks)==========
-        // 24 values --clk1-> 12v --clk2-> 6v --clk3-> 3v --clk4-> 2v --clk5-> 1 value
-        for (int i = 0; i < 12; i++) begin : Accum24to12
-            Accum_reg_24to12[i] <= Rshift_regs[i] + Rshift_regs[23-i];
+        // ===========================================================
+
+        // 24 values --clk1-> 12val --clk2-> 6v --clk3-> 3v --clk4-> 2v --clk5-> 1 value
+        for (int i = 0; i < 12; i++) begin : Accum24to12    // Q3.30 + Q3.30 == Q4.30
+            Accum_reg_24to12[i] <= product_regs[i] + product_regs[23-i];
         end
-        for (int i = 0; i < 6; i++) begin : Accum12to6
+        for (int i = 0; i < 6; i++) begin : Accum12to6      // == Q5.30
             Accum_reg_12to6[i] <= Accum_reg_24to12[i] + Accum_reg_24to12[11-i];
         end
-        for (int i = 0; i < 3; i++) begin : Accum6to3
+        for (int i = 0; i < 3; i++) begin : Accum6to3       // == Q6.30
             Accum_reg_6to3[i] <= Accum_reg_12to6[i] + Accum_reg_12to6[5-i];
         end
+        
+        // Accum_reg_3to2: Q7.30 == Q6.30 + Q6.30 
         Accum_reg_3to2[0] <= Accum_reg_6to3[0] + Accum_reg_6to3[1];
-        Accum_reg_3to2[1] <= 22'(Accum_reg_6to3[2]);
-        data_out <= 16'(Accum_reg_3to2[0] + Accum_reg_3to2[1]);
+        Accum_reg_3to2[1] <= {Accum_reg_6to3[2][35],Accum_reg_6to3[2]}; // arithmetic sign extension
+        
+        // Accum_reg_2to1: Q8.30 == Q7.30 + Q7.30
+        Accum_reg_2to1 <= Accum_reg_3to2[0] + Accum_reg_3to2[1];    // Q8.30
+        
+        // Q8.30 == 1 bit sign [37]; 7 bits int [36:30]; 30 bits fractional [29:0] 
+        // Q1.15 == 1 bit sign [0], 15 bits fractional[14:0].
+        // data out (Q1.15) == Q8.30[37]; Q8.30[29:15]
+        data_out <= {Accum_reg_2to1[37], Accum_reg_2to1[29:15]};
     end
 end
 
