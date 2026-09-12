@@ -32,7 +32,7 @@ def mess_up_wave(base_wave):
     return messy_wave
 
 
-def FIR_filter(messy_signal):
+def FIR_filter(messy_signal, debug=False):
     clean_signal = []
     
     # Calculate true middle index (23 for a 47-tap filter)
@@ -54,7 +54,7 @@ def FIR_filter(messy_signal):
             # pre-add and multiply stages 
             tapval = coeff * (lossy_conversion(x_tap) + lossy_conversion(x_mirror))
             
-            # Allow bit growth (no intermediate quantization)
+            # Allow bit growth
             y_accum += tapval
 
         # Separately add the middle tap
@@ -65,8 +65,8 @@ def FIR_filter(messy_signal):
 
         # round to Q1.15 at the very end of summation (matches RTL right-shift stage)
         clean_signal.append(lossy_conversion(y_accum,1,15)) #? Q-format fixed?
-
-    plot_waves(clean_signal, seed="GoldenOUT_")
+    if debug:
+        plot_waves(clean_signal, seed="GoldenOUT_")
 
     return clean_signal
 

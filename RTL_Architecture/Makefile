@@ -1,7 +1,4 @@
-# ==============================================================================
-# SYSTEMVERILOG FIR FILTER SIMULATION MAKEFILE
-# ==============================================================================
-
+# Verilog setup
 SIM ?= verilator
 TOPLEVEL_LANG ?= verilog
 
