@@ -1,10 +1,16 @@
 # FIR Filter RTL Implementation
 
 *last updated: 9/11/2026*
+*last updated: 9/11/2026*
 
+---
 ---
 Welcome to my digital design project! This repository contains my work on building a 47-tap Finite Impulse Response (FIR) filter in SystemVerilog. 
 
+
+**Note on AI**: AI is not being used for Verilog code generation, and is being used sparingly for python code/housekeeping. As this is one of my first Verilog projects, I would rather push messier, beginner Verilog code that **I wrote** than a streamlined repo of AI content that I don't understand. I hope that a scan through my commit history, comments, and code, will demonstrate the intention I have put into the learning process of this project. 
+
+## Intro & Project Background
 
 **Note on AI**: AI is not being used for Verilog code generation, and is being used sparingly for python code/housekeeping. As this is one of my first Verilog projects, I would rather push messier, beginner Verilog code that **I wrote** than a streamlined repo of AI content that I don't understand. I hope that a scan through my commit history, comments, and code, will demonstrate the intention I have put into the learning process of this project. 
 
@@ -13,6 +19,7 @@ I chose this project as a self-guided introduction to verilog as a beginner at d
 
 ## Project Status
 
+Currently, the **SystemVerilog RTL** and the **Golden Model (Python)** are fully aligned at the bit-accurate level after successfully resolving rounding biases. 
 Currently, the **SystemVerilog RTL** and the **Golden Model (Python)** are fully aligned at the bit-accurate level after successfully resolving rounding biases. 
 
 ### What's Done
@@ -128,6 +135,10 @@ Currently, the **SystemVerilog RTL** and the **Golden Model (Python)** are fully
     * Implement an on-chip Direct Digital Synthesis (DDS) sine wave generator and a Linear Feedback Shift Register (LFSR) noise source to stream data into the FIR filter at 25 MHz.
 * **Dual-Buffer BRAM Storage**: 
     * Instantiate a True Dual-Port Gowin Block RAM (BRAM) IP block to store circular buffers of concurrent raw and filtered data waveforms.  
+* **Synthetic Noise Engine**: 
+    * Implement an on-chip Direct Digital Synthesis (DDS) sine wave generator and a Linear Feedback Shift Register (LFSR) noise source to stream data into the FIR filter at 25 MHz.
+* **Dual-Buffer BRAM Storage**: 
+    * Instantiate a True Dual-Port Gowin Block RAM (BRAM) IP block to store circular buffers of concurrent raw and filtered data waveforms.  
 
 ## Repository Structure
 * `goldenModel/`: Python reference model, Q1.15 fixed-point conversion scripts, and test vector generation.
@@ -137,9 +148,19 @@ Currently, the **SystemVerilog RTL** and the **Golden Model (Python)** are fully
 * `tests/`: `pytest` suite for the Python golden model and Q1.15 math logic.
 
   
+* `goldenModel/`: Python reference model, Q1.15 fixed-point conversion scripts, and test vector generation.
+* `RTL_Architecture/`: SystemVerilog source files (`.sv`), cocotb testbenches, and the Makefile for simulation.
+* `Notes/`: FPGA schematics, handwritten project diagrams
+    * `FIRf diagram 1/2`: Architecture plans and visual diagrams (e.g., pipelining strategies).
+* `tests/`: `pytest` suite for the Python golden model and Q1.15 math logic.
+
+  
 ## Tech Stack
 *   **Hardware Description**: SystemVerilog (Verilator simulation)
+*   **Hardware Description**: SystemVerilog (Verilator simulation)
 *   **Modeling & Scripting**: Python, NumPy, SciPy
+*   **Verification**: [cocotb](https://github.com/cocotb/cocotb), [Verilator](https://github.com/verilator/verilator), pytest
+*   **Waveform Viewer**: [Surfer](https://gitlab.com/surfer-project/surfer)
 *   **Verification**: [cocotb](https://github.com/cocotb/cocotb), [Verilator](https://github.com/verilator/verilator), pytest
 *   **Waveform Viewer**: [Surfer](https://gitlab.com/surfer-project/surfer)
 
