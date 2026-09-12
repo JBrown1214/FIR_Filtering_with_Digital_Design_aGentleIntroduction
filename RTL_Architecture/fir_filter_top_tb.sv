@@ -1,6 +1,6 @@
-module fir_filter_top_tb(output data_out)
+module fir_filter_top_tb(output data_out);
 
-    `timescale 1ns / 1ps;
+    `timescale 1ns / 10ps
 
     // 25Mhz = 25e6 hz = Frequency
     // Frequency = 1 / Period

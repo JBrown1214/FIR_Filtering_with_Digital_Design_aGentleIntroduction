@@ -1,6 +1,6 @@
 # FIR Filter RTL Implementation
 
-*last updated: 9/11/2026*
+*last updated: 9/12/2026*
 
 ---
 Welcome to my repo! This project contains my work on building a 47-tap Finite Impulse Response (FIR) filter in SystemVerilog. 
@@ -40,6 +40,7 @@ Below: Overlay of python Golden Model output and RTL model output. Note the cloc
 
 ## Intro & Project Background
 I chose this project as a self-guided introduction to verilog as a beginner at digital design. I learned a little Verilog in ECE 352 (intro to digital design), and brushed up my Verilog in the early summer of 2026 with HDLbits.com. This project was inspired greatly by ECE 352 and ECE 203 (intro to signal processing). This semester (Fall 2026) I am taking ECE 551, which is more Verilog intensive, and this project was great self-study to prepare myself.  
+
 [FIR filters](https://en.wikipedia.org/wiki/Finite_impulse_response) and [Q-format notation](https://support.arm.com/documentation/dui0066/f/axd/axd-facilities/data-formatting/q-format) are key parts of my project, understanding them both is crucial to understanding my design choices. 
 
 **Note on AI**: AI is not being used for Verilog code generation, and is being used sparingly for python code/housekeeping. As this is one of my first Verilog projects, I would rather push messier, beginner Verilog code that **I wrote** than a streamlined repo of AI content that I don't understand. I hope that a scan through my commit history, comments, and code, will demonstrate the intention I have put into the learning process of this project. 
