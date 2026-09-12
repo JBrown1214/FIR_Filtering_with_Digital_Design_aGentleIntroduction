@@ -5,6 +5,18 @@
 ---
 Welcome to my repo! This project contains my work on building a 47-tap Finite Impulse Response (FIR) filter in SystemVerilog. 
 
+<img src="output_plots/wave_1.png" alt="base sine wave" width="300"/>
+<img src="output_plots/wave_2.png" alt="random noise" width="300"/>
+
+
+<img src="output_plots/wave_3.png" alt="noisy sine wave" width="300"/>
+<img src="output_plots/GoldenOUT_wave_1.png" alt="golden model output" width="300"/>  
+
+
+^^ Above $\begin{bmatrix} a & b \\ c & d \end{bmatrix}$ : a) sine wave, b) random noise, c) noisy sine wave (FIR filter input), d) cleaned wave (python Golden Model output)  
+Below: Overlay of python Golden Model output and RTL model output. Note the clock delay as the Verilog pipeline fills up. 
+
+<img src="RTL_Architecture/output_plots/tb_plot_overlayOUT_waves_overlay.png" alt="Python Golden Model x Verilog overlay (9 clock difference)" width="600"/>
 
 
 ## Intro & Project Background
@@ -116,12 +128,13 @@ Currently, the **SystemVerilog RTL** and the **Golden Model (Python)** are fully
     * Resolved the 11.5 LSB accumulated truncation delta by matching Python's rounding behavior (.5LSB innaccuracy) with the Verilog RTL's (previously 12LSB).  
         * See the process: [**Finding the bug**](https://github.com/JBrown1214/FIR_Filtering_with_Digital_Design_aGentleIntroduction/commit/fc3f80233fb0e2194166b9dd3f98c768d136b8b1) and [**The results of the fix**](https://github.com/JBrown1214/FIR_Filtering_with_Digital_Design_aGentleIntroduction/commit/ad830034589e2283fc720ae5643af5935ee0f846)
     * Achieved complete bit-accurate consistency between the Python reference model and the hardware implementation, tested with cocotb (`RTL_Architecture/fir_filter_tb.py`):
-        * Passing test (`/RTL_Architecture/fir_fitlertb.py`)
+        * Passing test screenshot (`/RTL_Architecture/fir_fitlertb.py`)  
+
         <img src="./Notes/cocotb_goldenModel_RTL_alignment.png" alt="Screenshot of Passing tb" width="600"/>
     
 
 ### What I'm Working On Next
-* **Synthetic Noise Engine**: 
+* **On-FPGA sine wave + noise wave generation**: 
     * Implement an on-chip Direct Digital Synthesis (DDS) sine wave generator and a Linear Feedback Shift Register (LFSR) noise source to stream data into the FIR filter at 25 MHz.
 * **Dual-Buffer BRAM Storage**: 
     * Instantiate a True Dual-Port Gowin Block RAM (BRAM) IP block to store circular buffers of concurrent raw and filtered data waveforms.  
