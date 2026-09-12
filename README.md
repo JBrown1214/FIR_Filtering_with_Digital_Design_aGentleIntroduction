@@ -20,7 +20,7 @@ Currently, the **SystemVerilog RTL** and the **Golden Model (Python)** are fully
 ### What's Done
 * **RTL Architecture Design**: 
     * Scaled the architecture from an initial 15-tap parallel filter to a more complex 47-tap FIR filter.
-    * Designed and refactored the data path into a pipelined tree structure to optimize timing 
+  * Designed and refactored the data path into a pipelined tree structure to optimize timing 
         * see `Notes/` FIRf diagram 1, FIRf diagram 2 (and the diagram below) to see the design evolution.
     * Completed the SystemVerilog implementation (`RTL_Architecture/fir_filter_top.sv`).
     * Design outline below: 
