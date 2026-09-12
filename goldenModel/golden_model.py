@@ -34,19 +34,37 @@ def mess_up_wave(base_wave):
 
 def FIR_filter(messy_signal):
     clean_signal = []
+    
+    # Calculate true middle index (23 for a 47-tap filter)
+    mid_tap = len(fir_coeff) // 2
+    num_taps = len(fir_coeff)
 
     for n in range(len(messy_signal)):
 
         y_accum = 0
-        for tap in range(len(fir_coeff)):
-            if n-tap >= 0:
-                product = (lossy_conversion(fir_coeff[tap]) * lossy_conversion(messy_signal[n-tap]))
-                # lossy conversion of inputs to ensure python golden model values match FPGA
-                
-                y_accum += product # sum without rounding to match FPGA
+        for tap in range(mid_tap):    # loops 0-22 (excludes 23)
+            
+            # Causal pre-adder matching x_reg[i] + x_reg[46-i]
+            # Values prior to time 0 are 0 (simulates RTL reset state)
+            x_tap = messy_signal[n - tap] if (n - tap) >= 0 else 0.0
+            x_mirror = messy_signal[n - (num_taps - 1 - tap)] if (n - (num_taps - 1 - tap)) >= 0 else 0.0
+            
+            coeff = lossy_conversion(fir_coeff[tap])
 
-        # round all to Q1.15 only at the very end of summation 
-        clean_signal.append(lossy_conversion(y_accum,7,15)) #? Q-format fixed?
+            # pre-add and multiply stages 
+            tapval = coeff * (lossy_conversion(x_tap) + lossy_conversion(x_mirror))
+            
+            # Allow bit growth (no intermediate quantization)
+            y_accum += tapval
+
+        # Separately add the middle tap
+        x_mid = messy_signal[n - mid_tap] if (n - mid_tap) >= 0 else 0.0
+        coeff = lossy_conversion(fir_coeff[mid_tap])      
+        y_accum += lossy_conversion(x_mid) * coeff
+
+
+        # round to Q1.15 at the very end of summation (matches RTL right-shift stage)
+        clean_signal.append(lossy_conversion(y_accum,1,15)) #? Q-format fixed?
 
     plot_waves(clean_signal, seed="GoldenOUT_")
 
@@ -121,24 +139,19 @@ def plot_delta_histogram(delta_count, filename="delta_histogram.png"):
     print(f"Saved histogram to: {output_path}")
 
 
-
-
-
-
 def main():
     base_wave = np.sin(np.pi*2*t*FREQ_BASE) * BASE_WAVE_AMPLITUDE 
     print(f"Your signal to noise ratio (db) is: {20 * np.log(BASE_WAVE_AMPLITUDE/(1-BASE_WAVE_AMPLITUDE))}")
     messy_signal = mess_up_wave(base_wave)
     clean_signal = FIR_filter(messy_signal) #? Q-format fixed?
 
-     #? Q-format fixed? (technically fine becase this func is never called with -1<vals<1)
+    #? Q-format fixed? (technically fine becase this func is never called with -1<vals<1)
     output_float_array_file(messy_signal, "messy_stimulus") #?
     output_float_array_file(clean_signal, "expected_output") #?
 
     output_float_array_file(fir_coeff, "fir_coeffs", "HEX") #?
     output_float_array_file(fir_coeff, "fir_coeffs", "DEC")
 
-    
     return clean_signal
 
 if __name__ == "__main__":

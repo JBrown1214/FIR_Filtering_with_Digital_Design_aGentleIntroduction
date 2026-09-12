@@ -21,7 +21,7 @@ def output_float_array_file(float_array_in, array_name="default_arrayname", outp
             
             qFormat_array = []
             for i in float_array_in:
-                qFormat = float_to_qFormat(i) #? Q-format fixed? (technically fine becase this func is never called with -1<vals<1)
+                qFormat = float_to_qFormat(i) 
                 qFormat_array.append(qFormat)
                 
             with open(file_path, "w") as output_file_hex:
@@ -45,7 +45,7 @@ def output_float_array_file(float_array_in, array_name="default_arrayname", outp
     else:
         str_array = []
         for i in float_array_in:
-            qFormat = float_to_qFormat(i)  #? Q-format fixed? (technically fine becase this func is never called with -1<vals<1)
+            qFormat = float_to_qFormat(i) 
             if qFormat > 0xFFFF:
                 str_array.append(f"{qFormat:0x}")
         return str_array

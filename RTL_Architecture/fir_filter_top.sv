@@ -78,15 +78,18 @@ always_ff @(posedge clk or negedge rst_n) begin : main
         end
 
         //* ==========Pipelined Pre-Adder & Multiplier Layer (3 clocks)==========
+        //PRE_ADD
         for (int i = 0; i <23; i++) begin : Pre_Adder      
             pre_add_regs[i] <= x_reg[i] + x_reg[46-i];
         end
         pre_add_regs[23] <= 17'(x_reg[23]);          // keep x[23] in-time with other x_reg values (not a clock behind)
 
+        // MULTIPLY
         for (int i = 0; i <24; i++) begin : Multiplier      
             product_regs[i] <= pre_add_regs[i] * coeff_regs[i];
         end
 
+        // RIGHT SHIFT
         for (int i = 0; i <24; i++) begin : Right_shift      
             Rshift_regs[i] <= 18'(product_regs[i] >>> 15);
         end
